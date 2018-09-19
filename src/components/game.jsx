@@ -4,6 +4,7 @@ import Boss from './boss';
 import Players from './players';
 import ActionLog from './actionLog';
 import BossLog from './bossLog'
+import PlayerLog from './playerLog';
 
 
 class Game extends Component {
@@ -44,6 +45,10 @@ class Game extends Component {
         criticalHit: "",
 
         bossLogText: "Boss is ready",
+
+        setup: false,
+
+        playerLogText: "Players Ready",
         
     }
 
@@ -120,13 +125,19 @@ class Game extends Component {
         return sum;
     }
 
-    handleChange = event => {
-        //event.preventDefault();
-        let x = event.target.value;
-        this.setState({playerAmount: x});
-        this.playerArray(event.target.value);
-        this.setBossDifficulty(event.target.value);
+    handleChange = async (event) =>  {
         
+        event.preventDefault();
+        let x = event.target.value;
+        await this.setState({playerAmount: x});
+        
+    }
+
+    handleSubmit = () => {
+        this.playerArray(this.state.playerAmount);
+        this.setBossDifficulty(this.state.playerAmount);
+        let setup = true;
+        this.setState({setup});
     }
 
     checkForCrit = results => {
@@ -228,6 +239,11 @@ class Game extends Component {
                     let bossLogText = "Boss attacks Player " + this.state.players[target].name + ", Boss does " + damage + " damage";
                     this.setState({bossLogText});
 
+                    let playersReset = this.state.players;
+                    for(let j=0; j < playersReset.length; j++){
+                        playersReset[j].def = playersReset[j].basedef;
+                    }
+                    this.setState({players : playersReset})
 
                     for(let x=0; x < this.state.players.length; x++){
                         if(this.state.players[x].hp <= 0){
@@ -270,8 +286,8 @@ class Game extends Component {
                 }
                 let Boss = this.state.Boss;
                 Boss.hp = Boss.hp - damage;
-                let bossLogText = this.state.criticalHit + " Player " + this.state.turn +" did " + damage + " damage";
-                this.setState({bossLogText});
+                let playerLogText = this.state.criticalHit + " Player " + this.state.turn +" did " + damage + " damage";
+                this.setState({playerLogText});
                 this.setState({Boss});
 
                 let cw = this.checkWin();
@@ -290,8 +306,8 @@ class Game extends Component {
                 }
             }
             else{
-                let bossLogText = "Player " + this.state.players[index].name + " Missed";
-                this.setState({bossLogText});
+                let playerLogText = "Player " + this.state.players[index].name + " Missed";
+                this.setState({playerLogText});
 
                 if(this.state.turn < this.state.players.length){
                     let turn =  this.state.turn + 1;
@@ -329,8 +345,8 @@ class Game extends Component {
             }
             let Boss = this.state.Boss;
             Boss.hp = Boss.hp - damage;
-            let bossLogText = this.state.criticalHit + " Player " + this.state.turn +" cast a spell and did " + damage + " damage";
-            this.setState({bossLogText});
+            let playerLogText = this.state.criticalHit + " Player " + this.state.turn +" cast a spell and did " + damage + " damage";
+            this.setState({playerLogText});
             this.setState({Boss});
 
             let cw = this.checkWin();
@@ -349,8 +365,8 @@ class Game extends Component {
             }
         }
         else{
-            let bossLogText = "Player " + this.state.players[index].name + " Missed";
-            this.setState({bossLogText});
+            let playerLogText = "Player " + this.state.players[index].name + " Missed";
+            this.setState({playerLogText});
 
             if(this.state.turn < this.state.players.length){
                 let turn =  this.state.turn + 1;
@@ -374,8 +390,32 @@ class Game extends Component {
             let players = this.state.players;
             players[index].hp += heal;
             this.setState({players});
-            let bossLogText =  " Player " + this.state.turn +" healed for " + heal + " HP";
-            this.setState({bossLogText});
+            let playerLogText =  " Player " + this.state.turn +" healed for " + heal + " HP";
+            this.setState({playerLogText});
+                  
+            if(this.state.turn < this.state.players.length){
+                let turn = this.state.turn + 1;
+                this.setState({turn})
+            }
+            else if(this.state.turn >= this.state.players.length){
+                let turn = 1;
+                this.setState({turn});
+                this.bossMove(); 
+                this.checkLoss();
+            }
+    }
+
+    handleDefense = () => {
+        let index = this.state.turn - 1;
+        let criticalHit = "";
+        this.setState({criticalHit})
+
+            let boost = 50;
+            let players = this.state.players;
+            players[index].def += boost;
+            this.setState({players});
+            let playerLogText =  " Player " + this.state.turn +" defended this turn";
+            this.setState({playerLogText});
                   
             if(this.state.turn < this.state.players.length){
                 let turn = this.state.turn + 1;
@@ -389,6 +429,7 @@ class Game extends Component {
             }
     }
     
+    
 
     refreshPage = () => {
         window.location.reload();
@@ -396,32 +437,40 @@ class Game extends Component {
  
     render() {
         console.log("render state", this.state.playerAmount);
-        if(this.state.playerAmount < 1){
+        if(this.state.setup === false){
             
         return ( 
             <div className="container">
                 <form onSubmit={this.handleChange} >
                     <label  className="col-8  mx-auto">How many players?</label><br></br>
-                    <input  type="text" id="example-text-input"  onChange={this.handleChange} /><br></br>
+                    <input  type="text" id="example-text-input" onChange={this.handleChange}  /><br></br>
+                    <button className="btn btn-primary mt-3" type="submit" onClick={this.handleSubmit}>Submit</button>
                 </form>
             </div>
         );}
            
         else{
            return(
-            
-            <div className="container mx-auto">
-                <div className="row">
-                    <Boss boss={this.state.Boss}/>
-                </div>
+                //<div class="container">
+                <div class="container">
+                    <div class="jumbotron jumbotron-fluid bg-danger text-white">
+                        <div class="container">
+                            <div className="row">
+                            <Boss boss={this.state.Boss}/>
+                            </div> 
+                        </div>
+                    </div>
                 {this.state.lose == false && this.state.win == false
                 ?
-                    <div className="container mx-auto pb-5 pt-5">
+                    <div className="container mx-auto pb-2 pt-2">
                         <div className="row">
                             <BossLog text={this.state.bossLogText}/>
                         </div>
                         <div className="row">
-                            <Moves attack={this.handleAttack} spell={this.handleSpell} heal={this.handleRest}/>
+                            <PlayerLog text={this.state.playerLogText} />
+                        </div>
+                        <div className="row pt-3 pb-3">
+                            <Moves attack={this.handleAttack} spell={this.handleSpell} heal={this.handleRest} defend={this.handleDefense}/>
                         </div>
                         <div className="row">
                             <ActionLog turn={this.state.turn} />

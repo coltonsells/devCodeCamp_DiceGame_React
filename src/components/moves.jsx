@@ -11,7 +11,7 @@ class Moves extends Component {
             <button className="btn" id="spell" onClick={this.props.spell}>
             Spell
             </button>
-            <button className="btn" id="defend" >
+            <button className="btn" id="defend" onClick={this.props.defend} >
             Defend
             </button>
             <button className="btn" id="rest" onClick={this.props.heal}>

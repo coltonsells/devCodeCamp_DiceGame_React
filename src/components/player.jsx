@@ -11,7 +11,7 @@ class Player extends Component {
        
     render() { 
         return ( 
-            <div className="col-sm-3 mx-auto">
+            <div className="col-sm-3 mx-auto bg-dark text-white">
                 <p>({this.props.player.class}) Player {this.props.player.name}'s HP: {this.props.player.hp}</p>
             </div>
          );
